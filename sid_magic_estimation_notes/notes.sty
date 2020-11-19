@@ -1,0 +1,100 @@
+\usepackage[margin=0.5in]{geometry}
+
+\usepackage{natbib}
+\usepackage[colorlinks=true,backref=false, linktocpage=true,
+citecolor=blue,urlcolor=blue,linkcolor=blue,pdfpagemode=UseOutlines]{hyperref}
+\hypersetup{%
+  bookmarksnumbered=true,
+  pdftitle = {},
+  pdfsubject = {},
+  pdfauthor = {},
+  pdfkeywords = {}
+}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\StN}{StN}
+\newcommand{\todo}{\colorbox{red}{\textsc{Todo}}}
+
+
+\usepackage{bm}
+\usepackage{braket}
+%\usepackage{soul}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage[font=small,it]{caption}
+\usepackage{float}
+\usepackage{subfig}
+
+\usepackage{xcolor}
+\usepackage{bold-extra}
+\usepackage{listings}
+
+\lstset{
+	language=c,
+	basicstyle={\footnotesize\ttfamily},
+	keywordstyle=\bfseries,
+	commentstyle=\color{black!75},
+	stringstyle=\slshape,
+	numberstyle=\footnotesize,
+	numbers=none,
+	showstringspaces=false,
+	breaklines=true,
+	tabsize=4,
+	frame=tb,
+	columns=fullflexible,
+	captionpos=b,
+	belowcaptionskip=1pt
+}
+
+\usepackage{caption}
+\captionsetup[lstlisting]{font={small,tt}}
+
+% Taken from https://tex.stackexchange.com/questions/70214/label-a-lstlisting-listing-in-the-lower-right-corner:
+
+\usepackage{xcolor}
+\usepackage{adjustbox,tikz}
+\definecolor{light-gray}{gray}{0.95}
+
+\makeatletter
+\newcommand{\mylabel}[1]{\color{blue}{\footnotesize\bf\ttfamily #1}\hspace{1em}}    
+
+\lstnewenvironment{code}[1]{
+    \lstset{
+        ,frame=single
+        ,xleftmargin=2em
+        ,xrightmargin=2em
+        ,backgroundcolor=\color{light-gray}
+        ,belowskip=0pt,
+    }%
+    \def\code@arg{#1}%
+    \setbox0\hbox\bgroup%
+}
+{%
+    \egroup\usebox0% printout the listing
+    \raisebox{\dimexpr-\dp0+\ht\strutbox\relax-0.5em}{% move near bottom of listing
+        \makebox[\dimexpr-\wd0+\lst@linewidth\relax+1.0em][r]{% makebox to right border
+            \mylabel{\code@arg}%
+        }%
+    }%
+}
+\makeatother
+
+% Modified from https://tex.stackexchange.com/questions/18604/chapter-formatting
+
+\usepackage{titlesec}
+
+\titleformat{\chapter}[block]
+  {\normalfont\huge\bfseries}{\thechapter.}{1em}{\Huge}
+\titlespacing*{\chapter}{0pt}{-19pt}{0pt}
+
+% Plots
+
+\usepackage{pgfplots}
+
+% Bibliography
+
+ \bibliographystyle{unsrt}

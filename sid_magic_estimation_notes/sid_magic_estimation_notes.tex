@@ -1,13 +1,15 @@
 \documentclass{article}
 
-\usepackage{../../notes}
+\usepackage{notes}
 
 \title{Estimating the mana of magical matrix product operators}
 \author{Siddhartha Harmalkar}
-\date{March 2020}
+\date{November 2020}
 
 \begin{document}
 \maketitle
+
+\tableofcontents
 
 \section{Introduction}
 
@@ -33,10 +35,10 @@ Instead of calculating the mana, we can approximate the magic of a state with th
 \end{figure}
 
 We find that $\mathcal N$ is much easier to work with than $\mathcal M$\footnote{This is reminiscent of how the standard deviation of a distribution, $\mathrm{E}[(X-\mathrm{E}[X])^2]^{1/2}$, is an easier quantity to work with than the more direct measure of the degree to which samples deviate from the mean: $\mathrm{E}[|X-\mathrm{E}[X]|]$}. In particular, we can efficiently approximate $\mathcal N$ by noticing that it is the distance between the state $\rho$ and the space of operators\footnote{Note that not all operators satisfying $W_u(\rho)\geq 0\ \forall u$ represent states - only those with $\Tr\rho=1$. Hermiticity is gauranteed, though, due to the fact that $W_u(\rho)\in \mathbb R$.} with non-negative Wigner function:
-\begin{equation}\mathcal N(\rho)=\underset{\mathcal M(\sigma)=0}{\min}D(\rho||\sigma),\end{equation}
+\begin{equation}\mathcal N(\rho)=\underset{\mathcal M(\sigma)=0}{\min}d(\rho,\sigma),\end{equation}
 where
-\begin{equation}D(\rho||\sigma)\equiv \sqrt{\sum_{u\in \mathbb Z_d^{2n}} \left(W_{\rho}(u)-W_{\sigma}(u)\right)^2}\end{equation}
-is the distance between two operators when viewed as vectors in the space of Wigner function coefficients. Therefore, we can approximate $M_2(\rho)$ by minimizing $D(\rho||\sigma)$ in the space of non-negative Wigner function operators $\sigma$. 
+\begin{equation}d(\rho,\sigma)\equiv \sqrt{\sum_{u\in \mathbb Z_d^{2n}} \left(W_{\rho}(u)-W_{\sigma}(u)\right)^2}\end{equation}
+is the distance between two operators when viewed as vectors in the space of Wigner function coefficients. Therefore, we can approximate $M_2(\rho)$ by minimizing $d(\rho,\sigma)$ in the space of non-negative Wigner function operators $\sigma$. 
 
 \section{Efficient approximation of $\mathcal N$ for a matrix product operator}
 
@@ -48,11 +50,9 @@ where $\{M^{(i)u}\}_{u=1}^d$ is a collection of $d$ matrices ``at site $i$'', in
 % 
 % However, we we don't know the structure of $N(\rho)$ for an arbitrary MPO. So we need to use a different quantity to get a handle on the magic of MPOs for large system sizes.
 
-The structure of matrix product operators can be exploited to reduce computational costs which are generically exponential in the $d$ to ones which are linear in the $d$ and polynomial in $D$. The procedure of estimating $\mathcal N(\rho)$ outlined above allows for such a reduction in computation time if $\rho$ is an MPO and the variational state $\sigma$ is also an MPO, as we can efficiently perform the contractions required in the computation of $D(\rho||\sigma)$ and its derivatives with respect to the degrees of freedom in $\sigma$ at a single site - see Section \ref{sec:contractions}
+The structure of matrix product operators can be exploited to reduce computational costs which are generically exponential in the $d$ to ones which are linear in the $d$ and polynomial in $D$. The procedure of estimating $\mathcal N(\rho)$ outlined above allows for such a reduction in computation time if $\rho$ is an MPO and the variational state $\sigma$ is also an MPO, as we can efficiently perform the contractions required in the computation of $d(\rho,\sigma)$ and its derivatives with respect to the degrees of freedom in $\sigma$ at a single site - see Section \ref{sec:contractions}
 
-The procedure is then to sweep through sites in a DMRG-like fashion, optimizing $D(\rho||\sigma)$ with respect to the degrees of freedom at each site in $\sigma$, under the constraint that $\sigma$ remains in the space of states with non-negative Wigner function:
-
-\pagebreak 
+The procedure is then to sweep through sites in a DMRG-like fashion, optimizing $d(\rho,\sigma)$ with respect to the degrees of freedom at each site in $\sigma$, under the constraint that $\sigma$ remains in the space of states with non-negative Wigner function:
 
 \paragraph{Algorithm for approximating $\mathcal N(\rho)$:} Given a matrix product operator $\rho=\sum_\alpha \otimes_k M^{(k)u_k}_{\alpha_k\alpha_{k+1}} A_k$ with bond dimension $D_\rho$, where $A_i$ are the phase space operators\footnote{If $\rho$ is represented in a different basis, perform a local change of basis to find its Wigner representation first: Let $\rho=\sum_\alpha \otimes_k M^{(k)u_k}_{\alpha_k\alpha_{k+1}} B_k$, where $B_k$ is some local operator basis. Then this consists of performing the change of basis $\rho^{(i)u}_{\alpha\beta}=\sum_v U_{uv}\rho^{(i)v}_{\alpha\beta}$, where $U_{uv}=\Tr[A_uB_v]$} \eqref{eq:phase_space_ops}:
 
@@ -60,15 +60,15 @@ The procedure is then to sweep through sites in a DMRG-like fashion, optimizing 
 \item Let $\sigma=\sum_{u,\alpha_i} \otimes_k\ \sigma^{(k)u_k}_{\alpha_k\alpha_{k+1}} A_{u_k}$ be a random MPO with bond dimension $D_\sigma$ such that $\sigma^{(k)u}_{\alpha\beta}\ \forall k\in \mathbb Z_n, u\in \mathbb Z_d^{2n},\alpha,\beta\in Z_{D_\sigma}$.
 \item Set $i\leftarrow 1$. While $i\leq n$:
 	\begin{enumerate}
-		\item Precompute the contractions required in the computation of the derivatives $\frac{\partial D(\rho||\sigma)}{\sigma^{(i)a}_{\alpha\beta}}$ - see Section \ref{sec:contractions}.
+		\item Precompute the contractions required in the computation of the derivatives $\frac{\partial d(\rho,\sigma)}{\sigma^{(i)a}_{\alpha\beta}}$ - see Section \ref{sec:contractions}.
 		\item Let $\mathcal F$ be the set of $d\times D_\sigma\times D_\sigma$ sized tensors\footnote{Since the first and last bond indices are dummy indices, the tensors have size $d\times 1\times D_\sigma$ for $i=1$, and $d\times D_\sigma\times 1$ for $i=n$} with non-negative elements: $x\in\mathcal F\Rightarrow x^u_{\alpha,\beta}\geq 0\ \forall u\in\mathbb Z_d, \alpha,\beta\in\mathbb Z_{D_\sigma}$, and $\hat \sigma(x)$ be the function which replaces the matrix in $\sigma$ at site $i$ with the matrix $x$:
 		\begin{equation}\hat \sigma:x\in \mathcal F\mapsto\sum_u\left(\sum_{\alpha}\sigma_{\alpha_1\alpha_2}^{(1)u_1}\cdots \sigma_{\alpha_{i-1}\alpha_i}^{(i-1)u_{i-1}}x^{u_i}_{\alpha_i\alpha_{i+1}}\sigma_{\alpha_{i+1}\alpha_{i+2}}^{(i+1)u_{i+1}}\cdots\sigma_{\alpha_L\alpha_{L+1}}^{(n)u_n}\right)A_{u_1}\otimes A_{u_2}\otimes\cdots\otimes A_{u_n}\end{equation}
-		\item Solve the constrained optimization problem $\sigma^{(i)*}=\underset{x\in\mathcal F}{\operatorname{argmin}}\ D(\rho||\hat \sigma(x))$ numerically, using a procedure such as \cite{bfgs_large_scale}.
+		\item Solve the constrained optimization problem $\sigma^{(i)*}=\underset{x\in\mathcal F}{\operatorname{argmin}}\ d(\rho,\hat \sigma(x))$ numerically, using a procedure such as \cite{bfgs_large_scale}.
 		\item  $\sigma^{(i)}\leftarrow \sigma^{(i)*}$
 		\item $i\leftarrow i+1$
 		\end{enumerate}
-	\item Repeat step 2 until $D(\rho||\sigma)$ asymptotes\footnote{Note that optimization algorithms might appear to asymptote but can later perform better if allowed to continue}
-	\item Increase the bond dimension $D_\sigma$. Repeat steps 2 and 3 until $D(\rho||\sigma)$ asymptotes with respect to bond dimension, or the computational resources required in step 2 become intractable.
+	\item Repeat step 2 until $d(\rho,\sigma)$ asymptotes\footnote{Note that optimization algorithms might appear to asymptote but can later perform better if allowed to continue}
+	\item Increase the bond dimension $D_\sigma$. Repeat steps 2 and 3 until $d(\rho,\sigma)$ asymptotes with respect to bond dimension (or the computational resources required in step 2 become intractable).
 \end{enumerate}
 
 
@@ -77,7 +77,7 @@ The procedure is then to sweep through sites in a DMRG-like fashion, optimizing 
 A few things should be noted about this optimization:
 
 \begin{itemize}
-	\item Even if the optimization is done perfectly, the final distance $D(\rho||\sigma)$ will only be an upper bound for $\mathcal N(\rho)$. This is because the set of states we can reach in our optimization algorithm is only a subset of the set of operators with non-negative Wigner function, due to the fact that $\sigma$ has a matrix product structure with fixed bond dimension and $\sigma^{(i)u_i}_{\alpha\beta}\geq 0\ \forall i,u_i,\alpha,\beta$, which is more restrictive than the requirement that $\sigma$ have non-negative Wigner function representation, i.e $W_u(\sigma)=\sum_\alpha \prod_i \sigma^{(i)u_i}_{\alpha_i,\alpha_{i+1}}\geq 0\ \forall u\in \mathbb Z_d^{2n}$. In practice, we alleviate the first restriction slightly by using larger bond dimensions until we either see our estimate for $\mathcal N$ asymptote or we run out of resources.
+	\item Even if the optimization is done perfectly, the final distance $d(\rho,\sigma)$ will only be an upper bound for $\mathcal N(\rho)$. This is because the set of states we can reach in our optimization algorithm is only a subset of the set of operators with non-negative Wigner function, due to the fact that $\sigma$ has a matrix product structure with fixed bond dimension and $\sigma^{(i)u_i}_{\alpha\beta}\geq 0\ \forall i,u_i,\alpha,\beta$, which is more restrictive than the requirement that $\sigma$ have non-negative Wigner function representation, i.e $W_u(\sigma)=\sum_\alpha \prod_i \sigma^{(i)u_i}_{\alpha_i,\alpha_{i+1}}\geq 0\ \forall u\in \mathbb Z_d^{2n}$. In practice, we alleviate the first restriction slightly by using larger bond dimensions until we either see our estimate for $\mathcal N$ asymptote or we run out of resources.
 	\item The space of MPOs with fixed bond dimension is not convex - adding two MPOs generally increases the bond dimension of the MPO. This means that our contrained optimization problem might settle on local minima. 
 \end{itemize}
 
@@ -93,6 +93,15 @@ Running the above algorithm with the L-BFGS-B constrained optimization method (A
 \subfloat[Runs with L-BFGS-B for varying bond dimensions]{\includegraphics[width=0.45\linewidth]{bond_dim}}
 \caption{Results from running the algorithm for approximating $\mathcal N(\rho)$ of a random mixed state $\rho$. Each run consists of 20 sweeps, and generates 40 points due to two optimizations being done during each sweep - one for each site.}
 \end{figure}
+
+\section{Next steps}
+
+We need to analyze optimization function on a variety of test cases to understand how it performs. for small $n$, we can exactly compute the true value of the optimal cost function and compare. Some ideas of families of states to look at:
+\begin{itemize}
+\item $S_\rho(\alpha)=\alpha\rho+\frac{(1-\alpha)}{d}I$, where $\rho$ is a random pure state. As we vary $\alpha$ from 0 to 1, the state should start to gain more magic as soon as it clears the stabilizer hull. Sampling a set of random $\rho$ uniformly and computing the average and standard deviation of the error in the result after optimization as a function of $n$ will give a good estimate of how well the optimizer does as the system size increases. 
+\item $S_{a,b}(\alpha)=aS_1+bS_2-\alpha I/d^n$: Here the idea is to mix two stabilizer states  $S_1$ and $S_2$ and walk in the negative direction of identity.  This is a good test because the distance $d(S_{a,b}(\alpha),I/d^n)$ should be linear in $\alpha$ even for large $n$.
+\item MPSs with truncated bond dimensions: Create a random state, turn it into an MPS with truncated bond dimension, or just do SVDs at each site and project onto the first few singular components. Truncate enough so that the mana is tractable even at large $n$, to compute the error in optimization exactly.
+\end{itemize}
 
 \section{Future work}
 
@@ -242,7 +251,7 @@ so for a properly normalized density matrix we have
 To generate random mixed states, we first generate $N$ random pure states $\left|\mathcal S_j\right>=\frac{1}{\sqrt{\sum_k c_{jk}^2}}c_{jk}\left|\phi_k\right>$, where $\left|\phi_j\right>$ is the computational basis, by generating a sample of normally-distributed complex coefficients $c_{jk}$. After normalizing, generate $N$ real numbers $r_i$ uniformly on $[0,1]$ and form the mixed state
 \begin{equation}\rho=\frac{1}{\sum_j r_j}\sum_{i=1}^N  r_i\left|\mathcal S_i\right>\left<\mathcal S_i\right|\end{equation}
 
-When $N=1$, the ``mixed'' state is really just a random pure state. As $N\to\infty$, it becomes maximally mixed. So fixing $N$ to a finite value gives us a moderately mixed state. We can get a sense of what $N$ to choose by looking at the average distance $D(\rho || \frac{1}{d} I)=\sqrt{\Tr[(\rho-\frac{1}{d}I)^2]}$ between the maximally mixed state and a randomly sampled state of $N$ pure states, where $d$ is the hilbert space dimension: For $N=1$, all states will have a fixed distance $\sqrt{\frac{d-1}{d}}$ from the maximally mixed state. As $N\to \infty$, $D\to 0$.
+When $N=1$, the ``mixed'' state is really just a random pure state. As $N\to\infty$, it becomes maximally mixed. So fixing $N$ to a finite value gives us a moderately mixed state. We can get a sense of what $N$ to choose by looking at the average distance $d(\rho,\frac{1}{d} I)=\sqrt{\Tr[(\rho-\frac{1}{d}I)^2]}$ between the maximally mixed state and a randomly sampled state of $N$ pure states, where $d$ is the hilbert space dimension: For $N=1$, all states will have a fixed distance $\sqrt{\frac{d-1}{d}}$ from the maximally mixed state. As $N\to \infty$, $D\to 0$.
 
 \begin{figure}[H]
 \centering
@@ -250,12 +259,12 @@ When $N=1$, the ``mixed'' state is really just a random pure state. As $N\to\inf
 \caption{Analysis of random state generation protocol as a function of the number $N$ of pure qudit states sampled in each mixed state. 100 mixed states were used to generate each point in the first plot, and 200 in the second. Error bars on both plots are generated using 100 bootstrap resamples - they are too small to see in the first plot.}
 \end{figure}
 
-\section{Efficient contraction scheme to compute $D(\rho||\sigma)$ and its derivatives}
+\section{Efficient contraction scheme to compute $d(\rho,\sigma)$ and its derivatives}
 
 \label{sec:contractions}
 
 Let $\rho=\sum_{u,\alpha_i} \otimes_k\ \rho^{(k)u_k}_{\alpha_k\alpha_{k+1}} A_{u_k}$ and $\sigma=\sum_{u,\alpha_i} \otimes_k\ \sigma^{(k)u_k}_{\alpha_k\alpha_{k+1}} A_{u_k}$ be MPOs in the phase space basis $A_u$ \eqref{eq:phase_space_ops} with bond dimensions $D_\rho$ and $D_\sigma$, respectively. In this basis, the Wigner coefficients are simply given by the matrix products $W_u(\rho)=\prod_i \rho^{(i)u_i}$ and $W_u(\sigma)=\prod_i \sigma^{(i)u_i}$ due to \eqref{eq:wigner_repr}, and the distance between them when viewed as vectors in the Wigner function representation space is simply
-\begin{equation}D(\rho||\sigma)=\left(\sum_u\left(\prod_i \rho^{(i)u_i}-\prod_j \rho^{(j)u_j}\right)^2\right)^{1/2}=d^{-n/2}\sqrt{\left<\rho|\rho\right>-2\left<\rho|\sigma\right>+\left<\sigma|\sigma\right>}\end{equation}
+\begin{equation}d(\rho,\sigma)=\left(\sum_u\left(\prod_i \rho^{(i)u_i}-\prod_j \rho^{(j)u_j}\right)^2\right)^{1/2}=d^{-n/2}\sqrt{\left<\rho|\rho\right>-2\left<\rho|\sigma\right>+\left<\sigma|\sigma\right>}\end{equation}
 Where $\left<\rho|\sigma\right>$ denotes the Frobenius overlap between the states $\rho$ and $\sigma$\footnote{The factor of $d^{-n}$ comes from the normalization of the phase space operators \eqref{eq:phase_space_norm}}:
 \begin{equation}\left<\rho|\sigma\right>=\Tr\left[\rho^\dagger\sigma\right]=d^{-n}\sum_u \left(\prod_i \rho^{(i)u_i}\right)\left(\prod_j \sigma^{(i)u_j}\right)\end{equation}
 This overlap can be calculated using a contraction order which allows for only a linear number of computations in $d$ and $n$ and cubic in $D_\sigma$ and $D_\rho$:
@@ -265,7 +274,7 @@ This overlap can be calculated using a contraction order which allows for only a
 \end{figure}
 In this diagram, vertical and horizontal lines indicate contraction over ``physical'' indices $u_i$ with dimension $d$ and ``bond'' indices with dimension $D_\rho$ (or $D_\sigma$), respectively. The tensor $M$ represents the tensor in memory during the contraction, which grows in size horizontally through the tensor network until all contractions are completed, at which point it contains no external legs and holds the value $\left<\rho|\sigma\right>$. The contractions in the diagram take $dD_\rho D_\sigma+dD_\rho^2 D_\sigma+dD_\rho D_\sigma^2+d D_\sigma D_\rho=\mathcal O(d D_\rho D_\sigma (D_\rho+D_\sigma))$ steps to compute. The entire calculation requires $n$ such contractions, and will take $O(n d D_\rho D_\sigma (D_\rho+D_\sigma))$ time.
 
-The derivative of $D(\rho||\sigma)$ with respect to the matrix element $\sigma^{(i)a}_{\alpha\beta}$ requires the computation of the derivative of $\left<\rho|\sigma\right>$ with respect to $\sigma^{(i)a}_{\alpha\beta}$, which is given by the following tensor:
+The derivative of $d(\rho,\sigma)$ with respect to the matrix element $\sigma^{(i)a}_{\alpha\beta}$ requires the computation of the derivative of $\left<\rho|\sigma\right>$ with respect to $\sigma^{(i)a}_{\alpha\beta}$, which is given by the following tensor:
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.4\linewidth]{{derivative}}
